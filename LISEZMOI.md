@@ -76,7 +76,7 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Bouton **Vue 3D** (cube) en haut d'une pièce ou d'un plan d'étage : le modèle 3D est construit à partir du scan, on le fait tourner avec un doigt et on zoome avec deux.
 - **Bibliothèque de mobilier** (cuisine, salon, chambre, salle de bain, divers) aux dimensions courantes. Touche un meuble pour le sélectionner, fais-le glisser pour le déplacer, tourne-le, duplique-le ou supprime-le. L'aménagement est enregistré avec le chantier.
 - **Export 3D en USDZ**, avec ou sans les meubles, rangé dans les Fichiers du chantier et partageable. « Voir en réalité augmentée » pose le modèle dans la pièce avec la caméra.
-- La vue 3D a besoin du scan d'origine : les pièces dupliquées ou très anciennes peuvent ne pas l'avoir.
+- La vue 3D a besoin du scan d'origine, enregistré avec chaque pièce scannée.
 
 ## Organisation du code
 
