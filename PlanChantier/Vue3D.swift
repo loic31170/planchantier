@@ -116,7 +116,12 @@ final class Scene3D {
         guard case .chargement = etat else { return }
         chantier = pieces.first?.chantier
         let triees = pieces.sorted { $0.dateScan < $1.dateScan }
-        cle = triees.first?.sessionScan?.uuidString ?? triees.first?.fichierScan ?? nom
+        let sessions = Set(triees.compactMap { $0.sessionScan })
+        if sessions.count == 1, triees.allSatisfy({ $0.sessionScan != nil }), let session = sessions.first {
+            cle = session.uuidString
+        } else {
+            cle = triees.map { $0.fichierScan ?? $0.nom }.joined(separator: "+")
+        }
         do {
             let url = try await Modele3D.exporterSalles(triees, nom: nom)
             urlSalles = url

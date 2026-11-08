@@ -78,6 +78,10 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - **Export 3D en USDZ**, avec ou sans les meubles, rangé dans les Fichiers du chantier et partageable. « Voir en réalité augmentée » pose le modèle dans la pièce avec la caméra.
 - La vue 3D a besoin du scan d'origine, enregistré avec chaque pièce scannée.
 
+## Ajouts de la version 0.10 : Plan 3D depuis l'accueil
+
+- Carte **Plan 3D** sur l'accueil (et icône cube en haut) : on choisit le chantier, puis les étages et les pièces à inclure, et on génère le plan 3D.
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -101,5 +105,6 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `Logo.swift` | Logo de l'entreprise |
 | `PlanCoteView.swift` | Plan de pièce coté façon architecte |
 | `Vue3D.swift` | Vue 3D, déplacement des meubles, export USDZ |
+| `Assistant3D.swift` | Plan 3D depuis l'accueil : choix du chantier et des pièces |
 | `Mobilier3D.swift` | Bibliothèque de mobilier 3D |
 | `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |
