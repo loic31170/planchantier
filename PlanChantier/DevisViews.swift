@@ -34,6 +34,15 @@ struct DevisView: View {
                 if let date = chantier.dateDevis {
                     LabeledContent("Date", value: date.formatted(date: .long, time: .omitted))
                 }
+                if !franchiseTVA {
+                    Picker("Travaux", selection: $chantier.natureTravaux) {
+                        ForEach(NatureTravaux.allCases) { nature in
+                            Text(nature.libelle).tag(nature.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: chantier.natureTravaux) { _, _ in chantier.appliquerTVA() }
+                }
                 Button {
                     dicteeOuverte = true
                 } label: {
@@ -191,6 +200,7 @@ struct DevisView: View {
     }
 
     static func ajouter(_ ligne: LigneDevis, a chantier: Chantier, contexte: ModelContext) {
+        ligne.tauxTVA = Entreprise.actuelle.franchiseTVA ? 0 : chantier.nature.taux
         contexte.insert(ligne)
         chantier.lignesDevis.append(ligne)
         if chantier.numeroDevis.isEmpty {

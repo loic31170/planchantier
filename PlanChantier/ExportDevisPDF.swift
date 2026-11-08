@@ -107,6 +107,10 @@ struct PageDevisPDF: View {
                 if entreprise.franchiseTVA {
                     Text("TVA non applicable, art. 293 B du CGI")
                         .font(.system(size: 9))
+                } else if chantier.nature == .renovation {
+                    Text("TVA au taux réduit de 10 % : travaux d'amélioration, de transformation, d'aménagement et d'entretien portant sur un logement achevé depuis plus de deux ans (art. 279-0 bis du CGI).")
+                        .font(.system(size: 8))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
                 signature
@@ -156,6 +160,9 @@ struct PageDevisPDF: View {
                     Text("Date : \(dateDevis.formatted(date: .long, time: .omitted))")
                     Text("Valable \(entreprise.validite) jours, jusqu'au \(dateDevis.addingTimeInterval(Double(entreprise.validite) * 86_400).formatted(date: .long, time: .omitted))")
                     Text("Chantier : \(chantier.nom)")
+                    if !entreprise.franchiseTVA {
+                        Text("Nature des travaux : \(chantier.nature == .neuf ? "construction neuve" : "rénovation")")
+                    }
                 }
                 .font(.system(size: 9))
             }

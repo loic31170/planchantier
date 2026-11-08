@@ -509,11 +509,6 @@ struct ProduitFormView: View {
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                 }
-                if !franchiseTVA {
-                    Picker("TVA", selection: $tva) {
-                        ForEach(TauxTVA.valeurs, id: \.self) { Text($0.enPourcentage).tag($0) }
-                    }
-                }
                 LabeledContent("Total HT", value: (quantite * prix).enEuros)
             }
             if produit.coutAchat > 0 {

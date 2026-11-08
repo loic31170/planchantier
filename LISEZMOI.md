@@ -105,6 +105,11 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Un écran de vérification montre les lignes proposées par pièce : tu coches, corriges les quantités et les prix, puis tu ajoutes au devis.
 - Au premier usage, l'iPhone demande l'accès au micro et à la reconnaissance vocale.
 
+## TVA selon la nature des travaux
+
+- En haut du devis : **Rénovation (10 %)** ou **Neuf (20 %)**. Le choix s'applique à toutes les lignes, existantes et nouvelles (une ligne peut encore être modifiée à la main).
+- En rénovation, le PDF porte la mention du taux réduit (art. 279-0 bis du CGI).
+
 ## Organisation du code
 
 | Fichier | Rôle |

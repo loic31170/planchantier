@@ -213,7 +213,22 @@ final class LigneDevis {
     var totalHT: Double { (quantite * prixHT * 100).rounded() / 100 }
 }
 
+enum NatureTravaux: String, CaseIterable, Identifiable {
+    case renovation, neuf
+    var id: String { rawValue }
+    var libelle: String { self == .neuf ? "Neuf (20 %)" : "Rénovation (10 %)" }
+    var taux: Double { self == .neuf ? 20 : 10 }
+}
+
 extension Chantier {
+    var nature: NatureTravaux { NatureTravaux(rawValue: natureTravaux) ?? .renovation }
+
+    /// TVA de toutes les lignes selon la nature des travaux (sauf franchise).
+    func appliquerTVA() {
+        let franchise = Entreprise.actuelle.franchiseTVA
+        for ligne in lignesDevis { ligne.tauxTVA = franchise ? 0 : nature.taux }
+    }
+
     /// Sections du devis : les pièces (ordre de scan), puis les sections orphelines, puis les travaux généraux ("").
     var sectionsDevis: [String] {
         var noms: [String] = []
