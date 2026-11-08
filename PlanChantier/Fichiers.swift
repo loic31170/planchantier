@@ -1,4 +1,5 @@
 import SwiftUI
+import QuickLook
 import SwiftData
 import PDFKit
 import VisionKit
