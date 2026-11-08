@@ -38,6 +38,7 @@ struct ChantierView: View {
     @Bindable var chantier: Chantier
 
     @State private var scanOuvert = false
+    @State private var traceOuvert = false
     @State private var lidarAbsent = false
     @State private var editionOuverte = false
     @State private var localisationOuverte = false
@@ -111,6 +112,9 @@ struct ChantierView: View {
         }
         .fullScreenCover(isPresented: $scanOuvert) {
             ScanView(chantier: chantier)
+        }
+        .fullScreenCover(isPresented: $traceOuvert) {
+            TracePlanView(chantier: chantier)
         }
         .fullScreenCover(isPresented: $appareilOuvert) {
             AppareilPhoto { image in ajouterPhoto(image) }
@@ -292,7 +296,21 @@ struct ChantierView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 14) {
-                    boutonAjout("Scanner") { lancerScan() }
+                    Menu {
+                        Button {
+                            lancerScan()
+                        } label: {
+                            Label("Scanner avec le LiDAR", systemImage: "camera.metering.matrix")
+                        }
+                        Button {
+                            traceOuvert = true
+                        } label: {
+                            Label("Importer un plan existant (PDF, image)", systemImage: "doc.richtext")
+                        }
+                    } label: {
+                        CercleAjout(titre: "Ajouter")
+                    }
+                    .buttonStyle(.plain)
                     ForEach(Array(chantier.etages.enumerated()), id: \.offset) { index, pieces in
                         NavigationLink {
                             EcranPlanEtage(titre: "Plan d'étage \(index + 1)", pieces: pieces)

@@ -105,6 +105,13 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Un écran de vérification montre les lignes proposées par pièce : tu coches, corriges les quantités et les prix, puis tu ajoutes au devis.
 - Au premier usage, l'iPhone demande l'accès au micro et à la reconnaissance vocale.
 
+## Plan depuis un plan existant (sans LiDAR)
+
+- Dans la fiche chantier, le « + » des Plans propose **Scanner avec le LiDAR** ou **Importer un plan existant** (PDF, image, ou photo du plan papier redressée automatiquement).
+- Étapes : mise à l'échelle avec une cote connue, clic des coins de la pièce (murs droits à 90° par défaut), portes et fenêtres en touchant les murs, nom et hauteur sous plafond.
+- Les pièces tracées sur un même plan forment un plan d'étage. Le plan importé est rangé dans les Fichiers du chantier.
+- Ces pièces n'ont pas de scan 3D : la vue 3D ne les montre pas.
+
 ## TVA selon la nature des travaux
 
 - En haut du devis : **Rénovation (10 %)** ou **Neuf (20 %)**. Le choix s'applique à toutes les lignes, existantes et nouvelles (une ligne peut encore être modifiée à la main).
@@ -137,5 +144,6 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `TravauxPieces.swift` | Travaux par pièce, ouvrages tout prêts, devis depuis l'accueil |
 | `Produits.swift` | Tarifs fournisseurs : import CSV, recherche, ajout au devis avec marge |
 | `Dictee.swift` | Dictée au micro et transformation en lignes de devis |
+| `TracePlan.swift` | Création des pièces à partir d'un plan existant (PDF, image) |
 | `Mobilier3D.swift` | Bibliothèque de mobilier 3D |
 | `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |
