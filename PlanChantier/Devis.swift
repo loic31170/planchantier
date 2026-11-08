@@ -124,6 +124,20 @@ enum CategorieTravaux: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Famille d'un fichier d'articles (« PLOMBERIE », « PEINTURE »…) vers une catégorie.
+    static func depuisFamille(_ famille: String, nom: String) -> CategorieTravaux {
+        let f = famille.lowercased()
+        if f.contains("peinture") || f.contains("enduit") || f.contains("traitement") { return .peinture }
+        if f.contains("plomberie") || f.contains("sanitaire") || f.contains("salle de bain") { return .plomberie }
+        if f.contains("electri") || f.contains("électri") { return .electricite }
+        if f.contains("sol") || f.contains("carrelage") { return .sols }
+        if f.contains("placo") || f.contains("maconnerie") || f.contains("maçonnerie") { return .demolition }
+        if f.contains("porte") || f.contains("bois") || f.contains("cuisine") { return .menuiserie }
+        if f.contains("chauffage") { return .chauffage }
+        let devinee = deviner(nom)
+        return devinee
+    }
+
     /// Rangement des prestations créées avant les catégories.
     static func deviner(_ nom: String) -> CategorieTravaux {
         let n = nom.lowercased()

@@ -96,6 +96,7 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Prix de revente : prix public du fournisseur, ou prix d'achat × ton coefficient. L'éco-contribution est ajoutée.
 - Dans le devis, **Ajouter des travaux > Fournitures** : on choisit un produit, la marge s'affiche pour toi, jamais sur le PDF. Le total du devis montre la marge sur fournitures.
 - Pour un autre fournisseur : exporter son tarif en CSV avec au moins une colonne libellé et une colonne prix.
+- Ton fichier d'articles est prêt dans `Produits/Tarifs Mes articles.csv` : les produits vont dans les tarifs, les lignes de type « Service » (main d'œuvre, forfaits) vont directement dans le catalogue de prestations avec ton prix et ta TVA.
 
 ## Ajouts de la version 0.13 : dictée du devis au micro
 

@@ -19,6 +19,8 @@ final class Produit {
     var categorie: String
     var image: String
     var fournisseur: String
+    /// Taux de TVA indiqué dans le fichier (0 = non précisé).
+    var tva: Double = 0
 
     init(code: String, libelle: String, marque: String, prixAchat: Double, prixPublic: Double,
          ecoContribution: Double, unite: String, famille: String, sousFamille: String,
@@ -37,19 +39,29 @@ final class Produit {
         self.fournisseur = fournisseur
     }
 
-    /// Coût réel : prix net + éco-contribution.
-    var coutAchat: Double { prixAchat + ecoContribution }
+    /// Coût réel : prix net + éco-contribution (0 si le prix d'achat est inconnu).
+    var coutAchat: Double { prixAchat > 0 ? prixAchat + ecoContribution : 0 }
 
     /// Prix de revente HT selon le réglage : prix public, ou achat × coefficient.
     func prixVente(coefficient: Double) -> Double {
-        let base = coefficient > 0 ? prixAchat * coefficient : max(prixPublic, prixAchat)
+        let base = coefficient > 0 && prixAchat > 0 ? prixAchat * coefficient : max(prixPublic, prixAchat)
         return ((base + ecoContribution) * 100).rounded() / 100
+    }
+
+    static func unite(depuis texte: String, libelle: String) -> UniteDevis {
+        let u = texte.lowercased()
+        if u.contains("m²") || u == "m2" || u.contains("mètre carré") { return .m2 }
+        if u == "ml" || u == "m" || u.contains("mètre") { return .ml }
+        if u.contains("heure") || u == "h" { return .heure }
+        if u.contains("forfait") || libelle.lowercased().contains("forfait") { return .forfait }
+        return .unite
     }
 
     var uniteDevis: UniteDevis {
         let u = unite.lowercased()
         if u.contains("mètre carré") || u.contains("m²") || u == "m2" { return .m2 }
         if u.contains("mètre") || u == "m" || u == "ml" { return .ml }
+        if u.contains("forfait") { return .forfait }
         if u.contains("heure") { return .heure }
         return .unite
     }
@@ -76,7 +88,7 @@ enum ImportProduits {
     /// Lit un CSV (séparateur ; , ou tabulation) et remplace les produits du même fournisseur.
     /// Reconnaît les en-têtes des exports Cedeo et des en-têtes simples (« libellé », « prix achat », « prix vente »…).
     @MainActor
-    static func importer(_ url: URL, contexte: ModelContext) throws -> Int {
+    static func importer(_ url: URL, contexte: ModelContext) throws -> (produits: Int, prestations: Int) {
         let acces = url.startAccessingSecurityScopedResource()
         defer { if acces { url.stopAccessingSecurityScopedResource() } }
         guard let donnees = try? Data(contentsOf: url) else { throw Erreur.illisible }
@@ -119,6 +131,8 @@ enum ImportProduits {
         let iCategorie = colonne(["nomenclature niv. 3", "catégorie", "categorie"])
         let iImage = colonne(["url image", "image"])
         let iEnseigne = colonne(["nom de l'enseigne", "fournisseur"])
+        let iType = colonne(["type"])
+        let iTVA = colonne(["tva"], sauf: ["ttc"])
 
         func valeur(_ ligne: [String], _ i: Int?) -> String {
             guard let i, i < ligne.count else { return "" }
@@ -142,15 +156,37 @@ enum ImportProduits {
         try contexte.delete(model: Produit.self, where: #Predicate { $0.fournisseur == fournisseur })
 
         var nombreImportes = 0
+        var nombrePrestations = 0
+        let catalogue = (try? contexte.fetch(FetchDescriptor<Prestation>())) ?? []
         for ligne in lignes {
             let libelle = valeur(ligne, iLibelle)
             guard !libelle.isEmpty else { continue }
             let achat = nombre(ligne, iAchat)
             let vente = nombre(ligne, iVente)
-            contexte.insert(Produit(code: valeur(ligne, iCode),
+            let type = valeur(ligne, iType).lowercased()
+
+            // Les services (main d'œuvre, forfaits) vont dans le catalogue de prestations.
+            if type.contains("service") || type.contains("prestation") {
+                let prix = iVente == nil ? achat : vente
+                let tva = iTVA == nil ? 10 : nombre(ligne, iTVA)
+                let unite = Produit.unite(depuis: valeur(ligne, iUnite), libelle: libelle)
+                let categorie = CategorieTravaux.depuisFamille(valeur(ligne, iFamille), nom: libelle)
+                if let existante = catalogue.first(where: { $0.nom.caseInsensitiveCompare(libelle) == .orderedSame }) {
+                    existante.prixHT = prix
+                    existante.tauxTVA = tva
+                } else {
+                    contexte.insert(Prestation(nom: libelle, unite: unite, prixHT: prix, tauxTVA: tva,
+                                               base: ImportProduits.base(pour: libelle, unite: unite),
+                                               categorie: categorie))
+                }
+                nombrePrestations += 1
+                continue
+            }
+
+            let produit = Produit(code: valeur(ligne, iCode),
                                     libelle: libelle,
                                     marque: valeur(ligne, iMarque),
-                                    prixAchat: iAchat == nil ? vente : achat,
+                                    prixAchat: iAchat == nil ? 0 : achat,
                                     prixPublic: iVente == nil ? achat : vente,
                                     ecoContribution: nombre(ligne, iEco),
                                     unite: valeur(ligne, iUnite),
@@ -158,11 +194,29 @@ enum ImportProduits {
                                     sousFamille: valeur(ligne, iSousFamille),
                                     categorie: valeur(ligne, iCategorie),
                                     image: valeur(ligne, iImage),
-                                    fournisseur: fournisseur))
+                                    fournisseur: fournisseur)
+            produit.tva = nombre(ligne, iTVA)
+            contexte.insert(produit)
             nombreImportes += 1
         }
         try contexte.save()
-        return nombreImportes
+        return (nombreImportes, nombrePrestations)
+    }
+
+    /// Pour une prestation au m², devine sur quelle mesure de la pièce la calculer.
+    static func base(pour nom: String, unite: UniteDevis) -> BaseQuantite {
+        let n = nom.lowercased()
+        switch unite {
+        case .m2:
+            if n.contains("plafond") { return .surfacePlafond }
+            if n.contains("mur") || n.contains("ratissage") || n.contains("peinture") || n.contains("faïence") { return .surfaceMursNette }
+            if n.contains("sol") || n.contains("parquet") || n.contains("lino") || n.contains("carrelage") || n.contains("ragréage") { return .surfaceSol }
+            return .manuelle
+        case .ml:
+            return n.contains("plinthe") ? .plinthes : .manuelle
+        default:
+            return .manuelle
+        }
     }
 
     /// Découpe un CSV en tenant compte des guillemets.
@@ -280,9 +334,11 @@ struct LigneProduit: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack(spacing: 10) {
-                    Text("Achat \(produit.coutAchat.enEuros)")
+                    if produit.coutAchat > 0 {
+                        Text("Achat \(produit.coutAchat.enEuros)")
+                    }
                     Text("Vente \(vente.enEuros)").fontWeight(.semibold)
-                    if vente > 0 {
+                    if vente > 0 && produit.coutAchat > 0 {
                         Text("Marge \(((vente - produit.coutAchat) / vente * 100).enQuantite) %")
                             .foregroundStyle(.green)
                     }
@@ -379,7 +435,9 @@ struct ProduitsView: View {
             Task { @MainActor in
                 do {
                     let n = try ImportProduits.importer(url, contexte: contexte)
-                    message = "\(n) produits importés."
+                    message = n.prestations > 0
+                        ? "\(n.produits) produits importés, et \(n.prestations) prestations ajoutées à ton catalogue."
+                        : "\(n.produits) produits importés."
                 } catch {
                     message = error.localizedDescription
                 }
@@ -458,12 +516,14 @@ struct ProduitFormView: View {
                 }
                 LabeledContent("Total HT", value: (quantite * prix).enEuros)
             }
+            if produit.coutAchat > 0 {
             Section {
                 LabeledContent("Prix d'achat", value: produit.coutAchat.enEuros)
                 LabeledContent("Marge", value: marge.enEuros)
                     .foregroundStyle(marge >= 0 ? Color.green : Color.red)
             } header: {
                 Text("Pour toi (non imprimé)")
+            }
             }
         }
         .navigationTitle("Fourniture")
@@ -476,7 +536,7 @@ struct ProduitFormView: View {
         }
         .onAppear {
             prix = produit.prixVente(coefficient: coefficient)
-            tva = franchiseTVA ? 0 : 10
+            tva = franchiseTVA ? 0 : (produit.tva > 0 ? produit.tva : 10)
         }
     }
 
