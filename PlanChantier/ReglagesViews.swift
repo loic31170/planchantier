@@ -50,6 +50,11 @@ struct ReglagesView: View {
                     } label: {
                         Label("Catalogue de prestations", systemImage: "list.bullet.rectangle")
                     }
+                    NavigationLink {
+                        ProduitsView()
+                    } label: {
+                        Label("Tarifs fournisseurs (produits)", systemImage: "shippingbox")
+                    }
                 }
             }
             .navigationTitle("Réglages")

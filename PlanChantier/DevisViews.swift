@@ -78,6 +78,13 @@ struct DevisView: View {
 
             Section("Total") {
                 LabeledContent("Total HT", value: totaux.ht.enEuros)
+                if chantier.lignesDevis.contains(where: { $0.prixAchat > 0 }) {
+                    let fournitures = chantier.lignesDevis.filter { $0.prixAchat > 0 }
+                    let marge = fournitures.reduce(0) { $0 + $1.totalHT - $1.prixAchat * $1.quantite }
+                    LabeledContent("Marge sur fournitures (non imprimée)", value: marge.enEuros)
+                        .font(.footnote)
+                        .foregroundStyle(.green)
+                }
                 if franchiseTVA {
                     Text("TVA non applicable, art. 293 B du CGI")
                         .font(.footnote)

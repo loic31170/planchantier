@@ -120,6 +120,16 @@ struct AjoutTravauxView: View {
                     }
                 }
 
+                if recherche.isEmpty {
+                    Section {
+                        NavigationLink {
+                            ChoixProduitView(chantier: chantier, piece: piece) { dismiss() }
+                        } label: {
+                            Label("Fournitures (tarifs fournisseurs)", systemImage: "shippingbox")
+                        }
+                    }
+                }
+
                 ForEach(CategorieTravaux.allCases) { categorie in
                     let liste = filtrees.filter { $0.categorie == categorie }
                     if !liste.isEmpty {

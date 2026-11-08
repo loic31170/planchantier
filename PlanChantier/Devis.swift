@@ -182,6 +182,8 @@ final class LigneDevis {
     var ordre: Int
     /// Pièce concernée (nom), vide pour les travaux généraux.
     var section: String = ""
+    /// Coût d'achat unitaire HT (fournitures), jamais imprimé.
+    var prixAchat: Double = 0
     var chantier: Chantier?
 
     init(designation: String, unite: UniteDevis, quantite: Double, prixHT: Double, tauxTVA: Double, ordre: Int) {

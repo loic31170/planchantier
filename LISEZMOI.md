@@ -90,6 +90,13 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - On peut indiquer l'emplacement : numéro du mur (comme sur le plan) et une précision libre.
 - Le catalogue s'enrichit de prestations d'électricité, plomberie, chauffage, maçonnerie… (prix d'exemple à adapter).
 
+## Ajouts de la version 0.12 : tarifs fournisseurs
+
+- Réglages > **Tarifs fournisseurs** : import d'un tarif en CSV (le fichier Cedeo est prêt dans `Produits/Tarifs Cedeo.csv`). Recherche par libellé, marque ou code, filtre par famille.
+- Prix de revente : prix public du fournisseur, ou prix d'achat × ton coefficient. L'éco-contribution est ajoutée.
+- Dans le devis, **Ajouter des travaux > Fournitures** : on choisit un produit, la marge s'affiche pour toi, jamais sur le PDF. Le total du devis montre la marge sur fournitures.
+- Pour un autre fournisseur : exporter son tarif en CSV avec au moins une colonne libellé et une colonne prix.
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -115,5 +122,6 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `Vue3D.swift` | Vue 3D, déplacement des meubles, export USDZ |
 | `Assistant3D.swift` | Plan 3D depuis l'accueil : choix du chantier et des pièces |
 | `TravauxPieces.swift` | Travaux par pièce, ouvrages tout prêts, devis depuis l'accueil |
+| `Produits.swift` | Tarifs fournisseurs : import CSV, recherche, ajout au devis avec marge |
 | `Mobilier3D.swift` | Bibliothèque de mobilier 3D |
 | `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |
