@@ -40,6 +40,7 @@ struct ChantierView: View {
     @State private var scanOuvert = false
     @State private var lidarAbsent = false
     @State private var editionOuverte = false
+    @State private var localisationOuverte = false
     @State private var documentPDF: DocumentPDF?
     @State private var photoAffichee: PhotoChantier?
     @State private var appareilOuvert = false
@@ -67,6 +68,13 @@ struct ChantierView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    editionOuverte = true
+                } label: {
+                    Label("Modifier", systemImage: "pencil")
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button {
                         exporterReleve()
@@ -87,6 +95,9 @@ struct ChantierView: View {
         }
         .sheet(isPresented: $editionOuverte) {
             EditionChantierView(chantier: chantier)
+        }
+        .sheet(isPresented: $localisationOuverte) {
+            LocalisationChantierView(chantier: chantier)
         }
         .sheet(item: $documentPDF) { document in
             FeuillePartage(elements: [document.url])
@@ -140,7 +151,7 @@ struct ChantierView: View {
             Text("Les pièces, photos et le devis de ce chantier seront supprimés.")
         }
         .task(id: chantier.adresse) {
-            await localiserAdresse()
+            if chantier.coordonnees == nil { await localiserAdresse() }
         }
     }
 
@@ -161,7 +172,7 @@ struct ChantierView: View {
     private var carteAdresse: some View {
         VStack(spacing: 0) {
             Button {
-                editionOuverte = true
+                localisationOuverte = true
             } label: {
                 HStack(spacing: 14) {
                     apercuCarte
@@ -190,9 +201,9 @@ struct ChantierView: View {
             if !chantier.adresse.isEmpty {
                 Divider().padding(.leading, 12)
                 Button {
-                    ouvrirItineraire()
+                    chantier.ouvrirDansPlans(itineraire: true)
                 } label: {
-                    Label("Itinéraire", systemImage: "car.fill")
+                    Label("Itinéraire avec Plans", systemImage: "car.fill")
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
@@ -513,12 +524,6 @@ struct ChantierView: View {
         }
     }
 
-    private func ouvrirItineraire() {
-        var composants = URLComponents(string: "https://maps.apple.com/")
-        composants?.queryItems = [URLQueryItem(name: "daddr", value: chantier.adresse)]
-        if let url = composants?.url { ouvrirURL(url) }
-    }
-
     private func localiserAdresse() async {
         let adresse = chantier.adresse.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !adresse.isEmpty else {
@@ -526,9 +531,6 @@ struct ChantierView: View {
             chantier.longitude = nil
             return
         }
-        // petite attente pour ne pas interroger le service à chaque lettre tapée
-        try? await Task.sleep(for: .seconds(1.5))
-        guard !Task.isCancelled else { return }
         if let lieu = try? await CLGeocoder().geocodeAddressString(adresse).first?.location {
             chantier.latitude = lieu.coordinate.latitude
             chantier.longitude = lieu.coordinate.longitude
@@ -647,7 +649,14 @@ struct EditionChantierView: View {
                 }
                 Section("Client") {
                     TextField("Nom du client", text: $chantier.client)
-                    TextField("Adresse du chantier", text: $chantier.adresse, axis: .vertical)
+                    NavigationLink {
+                        EditionAdresseView(chantier: chantier)
+                    } label: {
+                        LabeledContent("Adresse") {
+                            Text(chantier.adresse.isEmpty ? "Ajouter" : chantier.adresse.replacingOccurrences(of: "\n", with: ", "))
+                                .lineLimit(2)
+                        }
+                    }
                 }
             }
             .navigationTitle("Informations")

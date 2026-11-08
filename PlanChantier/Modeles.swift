@@ -13,6 +13,12 @@ final class Chantier {
     var descriptionChantier: String = ""
     /// Photos générales du chantier (dossier Documents/Photos).
     var photos: [String] = []
+    /// Adresse détaillée (l'adresse affichée est recomposée à partir de ces champs).
+    var adresseRue: String = ""
+    var adresseCodePostal: String = ""
+    var adresseVille: String = ""
+    var adresseRegion: String = ""
+    var adressePays: String = ""
     /// Position de l'adresse, calculée automatiquement.
     var latitude: Double?
     var longitude: Double?

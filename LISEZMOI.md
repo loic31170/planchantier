@@ -58,6 +58,13 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Photos : photos générales du chantier et photos des pièces, bouton + (appareil ou photothèque), « Voir tout »
 - Carte Devis (numéro et total TTC), informations de création, actions : exporter, favori, dupliquer, archiver, supprimer
 
+## Ajouts de la version 0.7 : localisation (Plans d'Apple uniquement)
+
+- Toucher la carte adresse ouvre la carte plein écran du chantier (plan ou satellite) avec son repère
+- « Itinéraire » ouvre directement l'appli Plans d'Apple en mode voiture ; « Ouvrir dans Plans » dans le menu carte
+- « Modifier » : adresse champ par champ (rue, ville, code postal, région, pays) avec suggestions d'adresses Apple, et « Supprimer l'adresse »
+- Bouton crayon en haut de la fiche chantier pour modifier le nom, la description et le client
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -69,6 +76,7 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `ScanView.swift` | Écran de scan RoomPlan |
 | `PlanPieceView.swift` | Dessin du plan 2D coté |
 | `ChantierView.swift` | Fiche d'un chantier |
+| `Localisation.swift` | Carte du chantier, itinéraire Plans, modification de l'adresse |
 | `ChantiersViews.swift` | Écrans : nouveau chantier, pièce |
 | `Photos.swift` | Photos des pièces : prise de vue, stockage, affichage |
 | `ExportPDF.swift` | Génération et partage du PDF du chantier |
