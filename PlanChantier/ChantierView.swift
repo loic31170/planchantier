@@ -198,6 +198,15 @@ struct ChantierView: View {
             }
             .buttonStyle(.plain)
 
+            if !chantier.infosPratiques.isEmpty {
+                Divider().padding(.leading, 12)
+                Label(chantier.infosPratiques, systemImage: "info.circle")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(12)
+            }
+
             if !chantier.adresse.isEmpty {
                 Divider().padding(.leading, 12)
                 Button {

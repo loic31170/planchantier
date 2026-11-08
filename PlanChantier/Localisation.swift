@@ -94,6 +94,12 @@ struct LocalisationChantierView: View {
                     Text(chantier.adresse.isEmpty ? "Aucune adresse" : chantier.adresse.replacingOccurrences(of: "\n", with: ", "))
                         .font(.subheadline.weight(.semibold))
                         .multilineTextAlignment(.center)
+                    if !chantier.infosPratiques.isEmpty {
+                        Label(chantier.infosPratiques, systemImage: "info.circle")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     HStack(spacing: 10) {
                         Button {
                             chantier.ouvrirDansPlans(itineraire: true)
@@ -192,6 +198,7 @@ struct EditionAdresseView: View {
     @Bindable var chantier: Chantier
 
     @State private var champs = ChampsAdresse()
+    @State private var infosPratiques = ""
     @State private var position: CLLocationCoordinate2D?
     @StateObject private var suggestions = SuggestionsAdresse()
     @State private var saisieRue = false
@@ -240,6 +247,16 @@ struct EditionAdresseView: View {
                 Text("Commence à taper la rue : Plans d'Apple te propose des adresses qui remplissent les autres champs.")
             }
 
+            Section {
+                TextField("ex. Stationnement facile devant, maison de plain-pied, code portail 1234…",
+                          text: $infosPratiques, axis: .vertical)
+                    .lineLimit(3...10)
+            } header: {
+                Text("Infos pratiques")
+            } footer: {
+                Text("Pour toi seulement : ces notes n'apparaissent ni sur le relevé ni sur le devis.")
+            }
+
             if !chantier.adresse.isEmpty {
                 Section {
                     Button("Supprimer l'adresse…", role: .destructive) {
@@ -283,6 +300,7 @@ struct EditionAdresseView: View {
         champs.ville = chantier.adresseVille
         champs.region = chantier.adresseRegion
         champs.pays = chantier.adressePays
+        infosPratiques = chantier.infosPratiques
         position = chantier.coordonnees
         guard champs.estVide, !chantier.adresse.isEmpty else { return }
         champs.rue = chantier.adresse.replacingOccurrences(of: "\n", with: ", ")
@@ -312,6 +330,7 @@ struct EditionAdresseView: View {
         chantier.adresseVille = champs.ville.trimmingCharacters(in: .whitespaces)
         chantier.adresseRegion = champs.region.trimmingCharacters(in: .whitespaces)
         chantier.adressePays = champs.pays.trimmingCharacters(in: .whitespaces)
+        chantier.infosPratiques = infosPratiques.trimmingCharacters(in: .whitespacesAndNewlines)
         let ancienneAdresse = chantier.adresse
         chantier.composerAdresse()
         if let position {

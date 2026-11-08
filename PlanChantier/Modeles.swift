@@ -19,6 +19,8 @@ final class Chantier {
     var adresseVille: String = ""
     var adresseRegion: String = ""
     var adressePays: String = ""
+    /// Infos pratiques sur l'accès (stationnement, étage, code portail…), pour l'artisan seulement.
+    var infosPratiques: String = ""
     /// Position de l'adresse, calculée automatiquement.
     var latitude: Double?
     var longitude: Double?
