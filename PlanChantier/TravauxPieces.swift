@@ -166,40 +166,106 @@ struct AjoutTravauxView: View {
 
 // MARK: - Emplacement dans la pièce
 
-/// Choix du mur (numéros du plan) et précision libre.
+/// Choix des murs (numéros du plan) et précision libre. Aucun mur coché = toute la pièce.
 struct ChoixEmplacement: View {
     let piece: Piece?
-    @Binding var mur: Int
+    @Binding var murs: Set<Int>
     @Binding var precision: String
 
     var body: some View {
         Section {
             if let piece {
-                let nombre = PlanPieceView.mursOrdonnes(piece.segments).count
-                if nombre > 0 {
+                let details = piece.detailMurs()
+                if !details.isEmpty {
                     PlanCoteView(segments: piece.segments, nom: nil, echelleVisible: false)
                         .frame(height: 200)
                         .background(Color(.systemBackground))
-                    Picker("Mur", selection: $mur) {
-                        Text("Non précisé").tag(0)
-                        ForEach(1...nombre, id: \.self) { n in
-                            Text("Mur \(n)").tag(n)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 8)], spacing: 8) {
+                        puce(titre: "Toute la pièce", detail: piece.surfaceMursNette.enMetresCarres, active: murs.isEmpty) {
+                            murs = []
+                        }
+                        ForEach(Array(details.enumerated()), id: \.offset) { index, mur in
+                            let numero = index + 1
+                            puce(titre: "Mur \(numero)", detail: mur.nette.enMetresCarres, active: murs.contains(numero)) {
+                                if murs.contains(numero) { murs.remove(numero) } else { murs.insert(numero) }
+                                if murs.count == details.count { murs = [] }
+                            }
                         }
                     }
+                    .padding(.vertical, 4)
                 }
             }
             TextField("Précision (ex. sous la fenêtre)", text: $precision, axis: .vertical)
         } header: {
             Text("Emplacement")
+        } footer: {
+            if piece != nil {
+                Text("Touche plusieurs murs pour les cumuler. Les surfaces sont nettes (portes et fenêtres déduites).")
+            }
         }
     }
 
-    static func texte(mur: Int, precision: String) -> String {
+    private func puce(titre: String, detail: String, active: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Text(titre).font(.subheadline.weight(.semibold))
+                Text(detail).font(.caption2)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .background(active ? Color.accentColor : Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10))
+            .foregroundStyle(active ? Color.white : Color.primary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    static func texte(murs: Set<Int>, precision: String) -> String {
         var elements: [String] = []
-        if mur > 0 { elements.append("mur \(mur)") }
+        let tries = murs.sorted()
+        if tries.count == 1 { elements.append("mur \(tries[0])") }
+        if tries.count > 1 { elements.append("murs " + tries.map(String.init).joined(separator: ", ")) }
         let p = precision.trimmingCharacters(in: .whitespacesAndNewlines)
         if !p.isEmpty { elements.append(p) }
         return elements.isEmpty ? "" : " (" + elements.joined(separator: ", ") + ")"
+    }
+
+    /// Quantité d'une prestation calculée sur les murs choisis (nil si le choix ne change rien).
+    static func quantite(_ base: BaseQuantite, piece: Piece, murs: Set<Int>) -> Double? {
+        let details = piece.detailMurs()
+        let choisis = details.enumerated().filter { murs.contains($0.offset + 1) }.map { $0.element }
+        guard !murs.isEmpty, !choisis.isEmpty else { return nil }
+        switch base {
+        case .surfaceMursNette: return choisis.reduce(0) { $0 + $1.nette }
+        case .surfaceMursBrute: return choisis.reduce(0) { $0 + $1.brute }
+        case .perimetre, .plinthes: return choisis.reduce(0) { $0 + $1.longueur }
+        default: return nil
+        }
+    }
+}
+
+extension Piece {
+    /// Longueur, surface brute et surface nette de chaque mur, dans l'ordre des numéros du plan.
+    func detailMurs() -> [(longueur: Double, brute: Double, nette: Double)] {
+        let murs = PlanPieceView.mursOrdonnes(segments)
+        guard !murs.isEmpty else { return [] }
+        let ouvertures = PlanPieceView.redresser(segments).filter { $0.genre == .porte || $0.genre == .fenetre }
+        let brutes = murs.map { $0.longueur * ($0.hauteur ?? hauteur) }
+        var nettes = brutes
+
+        func distance(_ x: Double, _ y: Double, _ m: SegmentPlan) -> Double {
+            let dx = m.x2 - m.x1, dy = m.y2 - m.y1
+            let l2 = dx * dx + dy * dy
+            let t = l2 > 0 ? max(0, min(1, ((x - m.x1) * dx + (y - m.y1) * dy) / l2)) : 0
+            let px = m.x1 + t * dx, py = m.y1 + t * dy
+            return ((x - px) * (x - px) + (y - py) * (y - py)).squareRoot()
+        }
+
+        for o in ouvertures {
+            let mx = (o.x1 + o.x2) / 2, my = (o.y1 + o.y2) / 2
+            guard let i = murs.indices.min(by: { distance(mx, my, murs[$0]) < distance(mx, my, murs[$1]) }) else { continue }
+            nettes[i] -= o.longueur * (o.hauteur ?? (o.genre == .porte ? 2.04 : 1.25))
+        }
+        return murs.indices.map { (murs[$0].longueur, brutes[$0], max(nettes[$0], 0)) }
     }
 }
 
@@ -215,7 +281,7 @@ struct TravailFormView: View {
 
     @State private var quantite: Double = 1
     @State private var prix: Double = 0
-    @State private var mur = 0
+    @State private var murs: Set<Int> = []
     @State private var precision = ""
 
     var body: some View {
@@ -241,7 +307,7 @@ struct TravailFormView: View {
                 }
                 LabeledContent("Total HT", value: (quantite * prix).enEuros)
             }
-            ChoixEmplacement(piece: piece, mur: $mur, precision: $precision)
+            ChoixEmplacement(piece: piece, murs: $murs, precision: $precision)
         }
         .navigationTitle("Ajouter au devis")
         .navigationBarTitleDisplayMode(.inline)
@@ -253,14 +319,20 @@ struct TravailFormView: View {
         }
         .onAppear {
             prix = prestation.prixHT
-            if let piece, prestation.base != .manuelle {
-                quantite = (prestation.base.quantite(pour: piece) * 100).rounded() / 100
-            }
+            recalculer()
         }
+        .onChange(of: murs) { _, _ in recalculer() }
+    }
+
+    private func recalculer() {
+        guard let piece, prestation.base != .manuelle else { return }
+        let total = ChoixEmplacement.quantite(prestation.base, piece: piece, murs: murs)
+            ?? prestation.base.quantite(pour: piece)
+        quantite = (total * 100).rounded() / 100
     }
 
     private func ajouter() {
-        let ligne = LigneDevis(designation: prestation.nom + ChoixEmplacement.texte(mur: mur, precision: precision),
+        let ligne = LigneDevis(designation: prestation.nom + ChoixEmplacement.texte(murs: murs, precision: precision),
                                unite: prestation.unite,
                                quantite: quantite,
                                prixHT: prix,
@@ -285,7 +357,7 @@ struct OuvrageFormView: View {
 
     @State private var longueur: Double = 0
     @State private var composants: [Ouvrage.Composant] = []
-    @State private var mur = 0
+    @State private var murs: Set<Int> = []
     @State private var precision = ""
 
     private func prestation(_ nom: String) -> Prestation? {
@@ -341,7 +413,7 @@ struct OuvrageFormView: View {
                 Text("Les prix viennent de ton catalogue. Tu pourras modifier chaque ligne ensuite dans le devis.")
             }
 
-            ChoixEmplacement(piece: piece, mur: $mur, precision: $precision)
+            ChoixEmplacement(piece: piece, murs: $murs, precision: $precision)
         }
         .navigationTitle("Ouvrage")
         .navigationBarTitleDisplayMode(.inline)
@@ -360,7 +432,7 @@ struct OuvrageFormView: View {
     }
 
     private func ajouter() {
-        let emplacement = ChoixEmplacement.texte(mur: mur, precision: precision)
+        let emplacement = ChoixEmplacement.texte(murs: murs, precision: precision)
         for composant in composants where composant.coche {
             let catalogue = prestation(composant.prestation)
             let ligne = LigneDevis(designation: composant.prestation + emplacement,
