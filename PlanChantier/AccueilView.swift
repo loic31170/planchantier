@@ -32,7 +32,7 @@ struct ListeChantiersView: View {
     @State private var assistantDevisOuvert = false
     @State private var aSupprimer: Chantier?
 
-    private let colonnes = [GridItem(.adaptive(minimum: 150, maximum: 260), spacing: 16)]
+    private let colonnes = [GridItem(.adaptive(minimum: 75, maximum: 130), spacing: 10)]
 
     private var chantiersAffiches: [Chantier] {
         chantiers
@@ -58,7 +58,7 @@ struct ListeChantiersView: View {
                     enTete
                     filtres
 
-                    LazyVGrid(columns: colonnes, alignment: .leading, spacing: 22) {
+                    LazyVGrid(columns: colonnes, alignment: .leading, spacing: 14) {
                         if filtre == .tous && recherche.isEmpty {
                             Button {
                                 nouveauChantier = true
@@ -238,20 +238,22 @@ struct ListeChantiersView: View {
 
 struct CarteNouveauChantier: View {
     var body: some View {
-        VStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 18)
+        VStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(Color.accentColor.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
-                .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: 18))
+                .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: "plus")
-                        .font(.system(size: 40, weight: .light))
+                        .font(.system(size: 22, weight: .light))
                         .foregroundStyle(Color.accentColor)
                 }
             Text("Nouveau chantier")
-                .font(.headline)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
-            Text(" ").font(.subheadline)
+            Text(" ").font(.caption2)
         }
     }
 }
@@ -281,61 +283,62 @@ struct CarteChantier: View {
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
-                RoundedRectangle(cornerRadius: 18)
+                RoundedRectangle(cornerRadius: 10)
                     .fill(Color(.secondarySystemGroupedBackground))
                 if piecesApercu.isEmpty {
                     VStack(spacing: 6) {
                         Image(systemName: "camera.viewfinder")
-                            .font(.system(size: 34, weight: .light))
+                            .font(.system(size: 18, weight: .light))
                         Text("Aucune pièce")
-                            .font(.caption)
+                            .font(.system(size: 8))
                     }
                     .foregroundStyle(.tertiary)
                 } else {
-                    PlanEtageView(pieces: piecesApercu, afficherNoms: false, epaisseur: 3, marge: 14)
-                        .padding(6)
+                    PlanEtageView(pieces: piecesApercu, afficherNoms: false, epaisseur: 1.5, marge: 7)
+                        .padding(3)
                 }
             }
             .aspectRatio(1, contentMode: .fit)
             .overlay(alignment: .bottomLeading) {
                 if !initiales.isEmpty {
                     Text(initiales)
-                        .font(.caption.weight(.bold))
+                        .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(Color.accentColor)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 18, height: 18)
                         .background(Color.accentColor.opacity(0.15), in: Circle())
-                        .padding(10)
+                        .padding(4)
                 }
             }
             .overlay(alignment: .topTrailing) {
                 if chantier.favori {
                     Image(systemName: "star.fill")
+                        .font(.system(size: 9))
                         .foregroundStyle(.yellow)
-                        .padding(10)
+                        .padding(4)
                 }
             }
             .overlay(alignment: .bottomTrailing) {
                 if !chantier.pieces.isEmpty {
                     Text(chantier.surfaceTotale.enMetresCarres)
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .font(.system(size: 8, weight: .semibold))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
                         .background(.thinMaterial, in: Capsule())
-                        .padding(10)
+                        .padding(4)
                 }
             }
-            .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
-            .padding(.bottom, 6)
+            .shadow(color: .black.opacity(0.06), radius: 3, y: 1)
+            .padding(.bottom, 3)
 
             Text(chantier.nom)
-                .font(.headline)
+                .font(.caption.weight(.semibold))
                 .lineLimit(1)
             Text(sousTitre)
-                .font(.subheadline)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
             Text("\(chantier.dateCreation.formatted(.dateTime.day().month(.abbreviated))) · \(chantier.pieces.count) pièce\(chantier.pieces.count > 1 ? "s" : "")")
-                .font(.caption)
+                .font(.system(size: 9))
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)

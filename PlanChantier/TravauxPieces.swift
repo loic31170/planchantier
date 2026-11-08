@@ -496,20 +496,22 @@ struct AssistantDevisView: View {
 
 struct CarteDevis: View {
     var body: some View {
-        VStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 18)
+        VStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 10)
                 .fill(Color.orange.gradient)
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: "doc.text.magnifyingglass")
-                        .font(.system(size: 44, weight: .light))
+                        .font(.system(size: 22, weight: .light))
                         .foregroundStyle(.white)
                 }
             Text("Générer un devis")
-                .font(.headline)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
             Text("Travaux pièce par pièce")
-                .font(.subheadline)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }

@@ -199,20 +199,22 @@ struct ChoixPieces3DView: View {
 
 struct CartePlan3D: View {
     var body: some View {
-        VStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 18)
+        VStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 10)
                 .fill(Color.accentColor.gradient)
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: "cube.transparent")
-                        .font(.system(size: 44, weight: .light))
+                        .font(.system(size: 22, weight: .light))
                         .foregroundStyle(.white)
                 }
             Text("Plan 3D")
-                .font(.headline)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
             Text("Choisir chantier et pièces")
-                .font(.subheadline)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
