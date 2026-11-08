@@ -246,6 +246,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = PlanChantier;
 				INFOPLIST_KEY_NSCameraUsageDescription = "La caméra et le capteur LiDAR servent à scanner les pièces pour en dessiner le plan.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Le micro sert à dicter les travaux pour préparer le devis.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "La reconnaissance vocale transforme ta dictée en texte pour préparer le devis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -278,6 +280,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = PlanChantier;
 				INFOPLIST_KEY_NSCameraUsageDescription = "La caméra et le capteur LiDAR servent à scanner les pièces pour en dessiner le plan.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Le micro sert à dicter les travaux pour préparer le devis.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "La reconnaissance vocale transforme ta dictée en texte pour préparer le devis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

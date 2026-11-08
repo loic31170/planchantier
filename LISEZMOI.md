@@ -97,6 +97,13 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Dans le devis, **Ajouter des travaux > Fournitures** : on choisit un produit, la marge s'affiche pour toi, jamais sur le PDF. Le total du devis montre la marge sur fournitures.
 - Pour un autre fournisseur : exporter son tarif en CSV avec au moins une colonne libellé et une colonne prix.
 
+## Ajouts de la version 0.13 : dictée du devis au micro
+
+- Dans le devis, **Dicter des travaux au micro** : tu décris les travaux pièce par pièce, le texte s'affiche (modifiable), puis « Transformer en lignes de devis ».
+- L'analyse utilise l'IA d'Apple sur l'iPhone (iOS 26, iPhone 15 Pro ou plus récent, Apple Intelligence activé), sinon une analyse par mots-clés.
+- Un écran de vérification montre les lignes proposées par pièce : tu coches, corriges les quantités et les prix, puis tu ajoutes au devis.
+- Au premier usage, l'iPhone demande l'accès au micro et à la reconnaissance vocale.
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -123,5 +130,6 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `Assistant3D.swift` | Plan 3D depuis l'accueil : choix du chantier et des pièces |
 | `TravauxPieces.swift` | Travaux par pièce, ouvrages tout prêts, devis depuis l'accueil |
 | `Produits.swift` | Tarifs fournisseurs : import CSV, recherche, ajout au devis avec marge |
+| `Dictee.swift` | Dictée au micro et transformation en lignes de devis |
 | `Mobilier3D.swift` | Bibliothèque de mobilier 3D |
 | `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |

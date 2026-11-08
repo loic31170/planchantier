@@ -12,6 +12,7 @@ struct DevisView: View {
     @State private var ligneEditee: LigneDevis?
     @State private var documentPDF: DocumentPDF?
     @State private var cible: CibleTravaux?
+    @State private var dicteeOuverte = false
 
     struct CibleTravaux: Identifiable {
         let id = UUID()
@@ -32,6 +33,12 @@ struct DevisView: View {
                 LabeledContent("Numéro", value: chantier.numeroDevis.isEmpty ? "attribué au premier ajout" : chantier.numeroDevis)
                 if let date = chantier.dateDevis {
                     LabeledContent("Date", value: date.formatted(date: .long, time: .omitted))
+                }
+                Button {
+                    dicteeOuverte = true
+                } label: {
+                    Label("Dicter des travaux au micro", systemImage: "mic.fill")
+                        .fontWeight(.semibold)
                 }
             }
 
@@ -119,6 +126,9 @@ struct DevisView: View {
         }
         .sheet(isPresented: $ajoutOuvert) {
             AjoutPrestationView(chantier: chantier)
+        }
+        .sheet(isPresented: $dicteeOuverte) {
+            DicteeDevisView(chantier: chantier)
         }
         .sheet(item: $cible) { cible in
             AjoutTravauxView(chantier: chantier, piece: cible.piece)
