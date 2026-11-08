@@ -45,8 +45,9 @@ struct PieceView: View {
         let segments = piece.segments
         List {
             Section {
-                PlanPieceView(segments: segments)
-                    .frame(height: 340)
+                PlanCoteView(segments: segments, nom: piece.nom)
+                    .frame(height: 380)
+                    .background(Color(.systemBackground))
                 LegendePlan()
             }
 

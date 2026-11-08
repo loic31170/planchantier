@@ -7,6 +7,6 @@ struct PlanChantierApp: App {
         WindowGroup {
             ListeChantiersView()
         }
-        .modelContainer(for: [Chantier.self, Piece.self, Prestation.self, LigneDevis.self])
+        .modelContainer(for: [Chantier.self, Piece.self, Prestation.self, LigneDevis.self, DocumentChantier.self])
     }
 }

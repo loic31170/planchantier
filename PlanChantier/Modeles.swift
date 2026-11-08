@@ -31,6 +31,9 @@ final class Chantier {
     @Relationship(deleteRule: .cascade, inverse: \LigneDevis.chantier)
     var lignesDevis: [LigneDevis] = []
 
+    @Relationship(deleteRule: .cascade, inverse: \DocumentChantier.chantier)
+    var documents: [DocumentChantier] = []
+
     /// Numéro attribué au premier ajout d'une ligne de devis (ex. D-2026-001).
     var numeroDevis: String = ""
     var dateDevis: Date?
@@ -50,6 +53,7 @@ final class Chantier {
     func supprimerFichiers() {
         pieces.forEach { $0.supprimerFichiers() }
         photos.forEach { StockagePhotos.supprimer($0) }
+        documents.forEach { StockageDocuments.supprimer($0.fichier) }
     }
 
     /// Crée une copie complète du chantier : pièces, photos et lignes de devis (sans numéro de devis).

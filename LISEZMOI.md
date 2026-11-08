@@ -65,6 +65,12 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - « Modifier » : adresse champ par champ (rue, ville, code postal, région, pays) avec suggestions d'adresses Apple, et « Supprimer l'adresse »
 - Bouton crayon en haut de la fiche chantier pour modifier le nom, la description et le client
 
+## Ajouts de la version 0.8 : fichiers et rapport façon architecte
+
+- Nouvelle section **Fichiers** dans la fiche chantier : chaque relevé et chaque devis généré y est rangé automatiquement, on peut aussi scanner un document papier ou importer un PDF, une image ou un modèle 3D. Appui long pour partager, renommer ou supprimer.
+- Plans de pièce cotés façon architecte : murs épais, portes avec leur sens d'ouverture, fenêtres, chaînes de cotes avec les ouvertures, échelle.
+- Rapport PDF refait : page de garde avec la carte Plans d'Apple, tableau des chiffres clés et récapitulatif des pièces, bandeau chantier en haut de chaque page, photos sur 3 colonnes étiquetées « Pièce · Photo n ».
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -86,3 +92,5 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `ExportDevisPDF.swift` | PDF du devis |
 | `PlanEtageView.swift` | Plan d'étage assemblé |
 | `Logo.swift` | Logo de l'entreprise |
+| `PlanCoteView.swift` | Plan de pièce coté façon architecte |
+| `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |

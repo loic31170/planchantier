@@ -56,6 +56,9 @@ struct ChantierView: View {
                 statistiques
                 sectionPlans
                 sectionPhotos
+                SectionFichiers(chantier: chantier,
+                                genererReleve: { exporterReleve() },
+                                genererDevis: { exporterDevis() })
                 sectionDevis
                 informations
                 actions
@@ -522,15 +525,19 @@ struct ChantierView: View {
     }
 
     private func exporterReleve() {
-        if let url = ExportPDF.generer(chantier) {
+        Task {
+            guard let url = await ExportPDF.generer(chantier) else { return }
+            let date = Date.now.formatted(date: .abbreviated, time: .shortened)
+            _ = chantier.archiver(url, nom: "Relevé du \(date)", genre: .releve, contexte: contexte)
             documentPDF = DocumentPDF(url: url)
         }
     }
 
     private func exporterDevis() {
-        if let url = ExportDevisPDF.generer(chantier) {
-            documentPDF = DocumentPDF(url: url)
-        }
+        guard let url = ExportDevisPDF.generer(chantier) else { return }
+        let numero = chantier.numeroDevis.isEmpty ? "" : " \(chantier.numeroDevis)"
+        _ = chantier.archiver(url, nom: "Devis\(numero)", genre: .devis, contexte: contexte)
+        documentPDF = DocumentPDF(url: url)
     }
 
     private func localiserAdresse() async {

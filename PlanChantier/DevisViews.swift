@@ -93,6 +93,8 @@ struct DevisView: View {
             ToolbarItem {
                 Button {
                     if let url = ExportDevisPDF.generer(chantier) {
+                        let numero = chantier.numeroDevis.isEmpty ? "" : " \(chantier.numeroDevis)"
+                        _ = chantier.archiver(url, nom: "Devis\(numero)", genre: .devis, contexte: contexte)
                         documentPDF = DocumentPDF(url: url)
                     }
                 } label: {
