@@ -44,16 +44,23 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Scan de plusieurs pièces à la suite (« Enregistrer et scanner la pièce suivante ») : elles sont assemblées en plan d'étage, visible dans le chantier et dans le PDF
 - Icône de l'appli, couleurs de l'entreprise, logo Les PaPa Potes sur les PDF (modifiable dans Réglages)
 
+## Ajouts de la version 0.5
+
+- Nouvelle page d'accueil : logo et nom de l'entreprise, chantiers en cartes avec l'aperçu du plan, surface totale et initiales du client
+- Recherche par nom, client ou adresse ; filtres Tous / Favoris / Archivés
+- Appui long sur une carte : favori, archiver, supprimer (avec confirmation)
+
 ## Organisation du code
 
 | Fichier | Rôle |
 | --- | --- |
 | `PlanChantierApp.swift` | Point d'entrée de l'appli |
+| `AccueilView.swift` | Page d'accueil : cartes des chantiers, recherche, filtres |
 | `Modeles.swift` | Données : Chantier, Pièce, segments du plan |
 | `AnalyseurPiece.swift` | Conversion du scan 3D en plan 2D et en métrés |
 | `ScanView.swift` | Écran de scan RoomPlan |
 | `PlanPieceView.swift` | Dessin du plan 2D coté |
-| `ChantiersViews.swift` | Écrans : liste des chantiers, chantier, pièce |
+| `ChantiersViews.swift` | Écrans : nouveau chantier, chantier, pièce |
 | `Photos.swift` | Photos des pièces : prise de vue, stockage, affichage |
 | `ExportPDF.swift` | Génération et partage du PDF du chantier |
 | `Devis.swift` | Données du devis : catalogue, lignes, calcul des quantités et totaux |

@@ -3,6 +3,9 @@ import SwiftUI
 /// Assemble les pièces scannées à la suite en un seul plan vu de dessus.
 struct PlanEtageView: View {
     let pieces: [Piece]
+    var afficherNoms = true
+    var epaisseur: CGFloat = 5
+    var marge: CGFloat = 24
 
     var body: some View {
         Canvas { contexte, taille in
@@ -19,7 +22,6 @@ struct PlanEtageView: View {
             let largeur = max(maxX - minX, 0.1)
             let profondeur = max(maxY - minY, 0.1)
 
-            let marge: CGFloat = 24
             let echelle = min((taille.width - 2 * marge) / largeur,
                               (taille.height - 2 * marge) / profondeur)
             let decalX = (taille.width - largeur * echelle) / 2
@@ -39,15 +41,15 @@ struct PlanEtageView: View {
 
             for s in traits where s.genre == .mur {
                 contexte.stroke(trait(s), with: .color(.primary),
-                                style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                                style: StrokeStyle(lineWidth: epaisseur, lineCap: .round))
             }
             for s in traits where s.genre != .mur {
                 contexte.stroke(trait(s), with: .color(PlanPieceView.couleur(s.genre)),
-                                style: StrokeStyle(lineWidth: 6, lineCap: .butt))
+                                style: StrokeStyle(lineWidth: epaisseur + 1, lineCap: .butt))
             }
 
             // Nom et surface au centre de chaque pièce
-            for element in parPiece {
+            for element in parPiece where afficherNoms {
                 let murs = element.traits.filter { $0.genre == .mur }
                 guard !murs.isEmpty else { continue }
                 let cx = murs.map { ($0.x1 + $0.x2) / 2 }.reduce(0, +) / Double(murs.count)

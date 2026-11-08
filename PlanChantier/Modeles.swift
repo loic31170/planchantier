@@ -8,6 +8,8 @@ final class Chantier {
     var client: String
     var adresse: String
     var dateCreation: Date
+    var favori: Bool = false
+    var archive: Bool = false
 
     @Relationship(deleteRule: .cascade, inverse: \Piece.chantier)
     var pieces: [Piece] = []
