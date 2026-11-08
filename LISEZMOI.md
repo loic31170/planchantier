@@ -50,6 +50,14 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Recherche par nom, client ou adresse ; filtres Tous / Favoris / Archivés
 - Appui long sur une carte : favori, archiver, supprimer (avec confirmation)
 
+## Ajouts de la version 0.6 : fiche chantier
+
+- Description du chantier, carte client + adresse avec mini-carte et bouton Itinéraire
+- Statistiques : surface au sol, surface murale, étages, pièces
+- Plans : défilement horizontal (plans d'étage puis pièces seules), bouton + pour scanner, « Voir tout »
+- Photos : photos générales du chantier et photos des pièces, bouton + (appareil ou photothèque), « Voir tout »
+- Carte Devis (numéro et total TTC), informations de création, actions : exporter, favori, dupliquer, archiver, supprimer
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -60,7 +68,8 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `AnalyseurPiece.swift` | Conversion du scan 3D en plan 2D et en métrés |
 | `ScanView.swift` | Écran de scan RoomPlan |
 | `PlanPieceView.swift` | Dessin du plan 2D coté |
-| `ChantiersViews.swift` | Écrans : nouveau chantier, chantier, pièce |
+| `ChantierView.swift` | Fiche d'un chantier |
+| `ChantiersViews.swift` | Écrans : nouveau chantier, pièce |
 | `Photos.swift` | Photos des pièces : prise de vue, stockage, affichage |
 | `ExportPDF.swift` | Génération et partage du PDF du chantier |
 | `Devis.swift` | Données du devis : catalogue, lignes, calcul des quantités et totaux |

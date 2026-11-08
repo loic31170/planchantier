@@ -10,6 +10,12 @@ final class Chantier {
     var dateCreation: Date
     var favori: Bool = false
     var archive: Bool = false
+    var descriptionChantier: String = ""
+    /// Photos générales du chantier (dossier Documents/Photos).
+    var photos: [String] = []
+    /// Position de l'adresse, calculée automatiquement.
+    var latitude: Double?
+    var longitude: Double?
 
     @Relationship(deleteRule: .cascade, inverse: \Piece.chantier)
     var pieces: [Piece] = []
@@ -30,6 +36,50 @@ final class Chantier {
 
     var surfaceTotale: Double {
         pieces.reduce(0) { $0 + $1.surfaceSol }
+    }
+
+    /// Supprime les fichiers du chantier (scans et photos).
+    func supprimerFichiers() {
+        pieces.forEach { $0.supprimerFichiers() }
+        photos.forEach { StockagePhotos.supprimer($0) }
+    }
+
+    /// Crée une copie complète du chantier : pièces, photos et lignes de devis (sans numéro de devis).
+    @discardableResult
+    func dupliquer(dans contexte: ModelContext) -> Chantier {
+        let copie = Chantier(nom: nom + " (copie)", client: client, adresse: adresse)
+        copie.descriptionChantier = descriptionChantier
+        copie.latitude = latitude
+        copie.longitude = longitude
+        copie.photos = photos.compactMap { StockagePhotos.copier($0) }
+        contexte.insert(copie)
+
+        var sessions: [UUID: UUID] = [:]
+        for piece in pieces {
+            let nouvelle = Piece(nom: piece.nom,
+                                 dateScan: piece.dateScan,
+                                 surfaceSol: piece.surfaceSol,
+                                 perimetre: piece.perimetre,
+                                 hauteur: piece.hauteur,
+                                 segments: piece.segments,
+                                 fichierScan: StockageScans.copier(piece.fichierScan))
+            nouvelle.notes = piece.notes
+            nouvelle.photos = piece.photos.compactMap { StockagePhotos.copier($0) }
+            if let session = piece.sessionScan {
+                let nouvelleSession = sessions[session] ?? UUID()
+                sessions[session] = nouvelleSession
+                nouvelle.sessionScan = nouvelleSession
+            }
+            contexte.insert(nouvelle)
+            copie.pieces.append(nouvelle)
+        }
+        for ligne in lignesDevis {
+            let nouvelle = LigneDevis(designation: ligne.designation, unite: ligne.unite, quantite: ligne.quantite,
+                                      prixHT: ligne.prixHT, tauxTVA: ligne.tauxTVA, ordre: ligne.ordre)
+            contexte.insert(nouvelle)
+            copie.lignesDevis.append(nouvelle)
+        }
+        return copie
     }
 
     /// Groupes d'au moins 2 pièces scannées à la suite (un groupe = un plan d'étage).

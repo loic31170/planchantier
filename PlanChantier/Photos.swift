@@ -28,6 +28,16 @@ enum StockagePhotos {
     static func supprimer(_ nom: String) {
         try? FileManager.default.removeItem(at: dossier.appending(path: nom))
     }
+
+    static func copier(_ nom: String) -> String? {
+        let nouveau = UUID().uuidString + ".jpg"
+        do {
+            try FileManager.default.copyItem(at: dossier.appending(path: nom), to: dossier.appending(path: nouveau))
+            return nouveau
+        } catch {
+            return nil
+        }
+    }
 }
 
 extension UIImage {

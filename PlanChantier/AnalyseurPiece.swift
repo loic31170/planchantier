@@ -101,6 +101,17 @@ enum StockageScans {
         }
     }
 
+    static func copier(_ nomFichier: String?) -> String? {
+        guard let nomFichier else { return nil }
+        let nouveau = UUID().uuidString + ".json"
+        do {
+            try FileManager.default.copyItem(at: dossier.appending(path: nomFichier), to: dossier.appending(path: nouveau))
+            return nouveau
+        } catch {
+            return nil
+        }
+    }
+
     static func supprimer(_ nomFichier: String?) {
         guard let nomFichier else { return }
         try? FileManager.default.removeItem(at: dossier.appending(path: nomFichier))

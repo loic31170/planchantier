@@ -113,7 +113,7 @@ struct ListeChantiersView: View {
                                 titleVisibility: .visible) {
                 Button("Supprimer définitivement", role: .destructive) {
                     if let chantier = aSupprimer {
-                        chantier.pieces.forEach { $0.supprimerFichiers() }
+                        chantier.supprimerFichiers()
                         contexte.delete(chantier)
                     }
                     aSupprimer = nil
