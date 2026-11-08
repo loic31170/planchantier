@@ -82,6 +82,14 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 
 - Carte **Plan 3D** sur l'accueil (et icône cube en haut) : on choisit le chantier, puis les étages et les pièces à inclure, et on génère le plan 3D.
 
+## Ajouts de la version 0.11 : devis pièce par pièce
+
+- Carte **Générer un devis** sur l'accueil : on choisit le chantier et on arrive sur son devis.
+- Le devis est rangé **par pièce**, avec un sous-total par pièce, plus une section « Travaux généraux ». Le PDF suit le même découpage.
+- Dans chaque pièce : **Ajouter des travaux**. Tu choisis une prestation du catalogue (rangé par corps de métier) ou un **ouvrage tout prêt** qui ajoute plusieurs lignes d'un coup : alimentation d'un radiateur (saignée + gaine + sortie de câble + rebouchage…), prise encastrée, point lumineux, remplacement d'une baignoire par une douche, lavabo, WC.
+- On peut indiquer l'emplacement : numéro du mur (comme sur le plan) et une précision libre.
+- Le catalogue s'enrichit de prestations d'électricité, plomberie, chauffage, maçonnerie… (prix d'exemple à adapter).
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -106,5 +114,6 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `PlanCoteView.swift` | Plan de pièce coté façon architecte |
 | `Vue3D.swift` | Vue 3D, déplacement des meubles, export USDZ |
 | `Assistant3D.swift` | Plan 3D depuis l'accueil : choix du chantier et des pièces |
+| `TravauxPieces.swift` | Travaux par pièce, ouvrages tout prêts, devis depuis l'accueil |
 | `Mobilier3D.swift` | Bibliothèque de mobilier 3D |
 | `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |

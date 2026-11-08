@@ -29,6 +29,7 @@ struct ListeChantiersView: View {
     @State private var nouveauChantier = false
     @State private var reglagesOuverts = false
     @State private var assistant3DOuvert = false
+    @State private var assistantDevisOuvert = false
     @State private var aSupprimer: Chantier?
 
     private let colonnes = [GridItem(.adaptive(minimum: 150, maximum: 260), spacing: 16)]
@@ -69,6 +70,12 @@ struct ListeChantiersView: View {
                                 assistant3DOuvert = true
                             } label: {
                                 CartePlan3D()
+                            }
+                            .buttonStyle(.plain)
+                            Button {
+                                assistantDevisOuvert = true
+                            } label: {
+                                CarteDevis()
                             }
                             .buttonStyle(.plain)
                         }
@@ -124,6 +131,9 @@ struct ListeChantiersView: View {
             .fullScreenCover(isPresented: $assistant3DOuvert) {
                 Assistant3DView()
             }
+            .sheet(isPresented: $assistantDevisOuvert) {
+                AssistantDevisView()
+            }
             .confirmationDialog("Supprimer ce chantier ?",
                                 isPresented: Binding(get: { aSupprimer != nil },
                                                      set: { if !$0 { aSupprimer = nil } }),
@@ -140,6 +150,7 @@ struct ListeChantiersView: View {
             }
             .onAppear {
                 Catalogue.initialiserSiBesoin(contexte)
+                Catalogue.completerSiBesoin(contexte)
             }
         }
     }

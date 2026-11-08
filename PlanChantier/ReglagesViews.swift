@@ -72,8 +72,11 @@ struct CatalogueView: View {
 
     var body: some View {
         List {
+            ForEach(CategorieTravaux.allCases) { categorie in
+                let liste = prestations.filter { $0.categorie == categorie }
+                if !liste.isEmpty {
             Section {
-                ForEach(prestations) { prestation in
+                ForEach(liste) { prestation in
                     Button {
                         prestationEditee = prestation
                     } label: {
@@ -86,10 +89,16 @@ struct CatalogueView: View {
                     }
                 }
                 .onDelete { positions in
-                    for i in positions { contexte.delete(prestations[i]) }
+                    for i in positions { contexte.delete(liste[i]) }
                 }
+            } header: {
+                Label(categorie.rawValue, systemImage: categorie.symbole)
             } footer: {
-                Text("Les prix de départ sont des exemples : adapte-les à tes tarifs.")
+                if categorie == .divers {
+                    Text("Les prix de départ sont des exemples : adapte-les à tes tarifs.")
+                }
+            }
+                }
             }
         }
         .navigationTitle("Catalogue")
@@ -118,6 +127,11 @@ struct PrestationFormView: View {
             Form {
                 Section("Prestation") {
                     TextField("Nom", text: $prestation.nom, axis: .vertical)
+                    Picker("Catégorie", selection: $prestation.categorieRaw) {
+                        ForEach(CategorieTravaux.allCases) { categorie in
+                            Label(categorie.rawValue, systemImage: categorie.symbole).tag(categorie.rawValue)
+                        }
+                    }
                 }
                 Section {
                     Picker("Quantité calculée à partir de", selection: $prestation.baseRaw) {

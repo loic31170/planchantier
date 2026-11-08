@@ -13,6 +13,7 @@ enum Reglages {
     static let validite = "devis.validiteJours"
     static let prochainNumero = "devis.prochainNumero"
     static let catalogueInitialise = "catalogue.initialise"
+    static let catalogueTravaux = "catalogue.travaux.v2"
 }
 
 struct Entreprise {
@@ -97,6 +98,46 @@ enum BaseQuantite: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Corps de métier, pour ranger le catalogue.
+enum CategorieTravaux: String, CaseIterable, Identifiable {
+    case demolition = "Démolition, maçonnerie"
+    case electricite = "Électricité"
+    case plomberie = "Plomberie"
+    case chauffage = "Chauffage"
+    case peinture = "Peinture"
+    case sols = "Sols"
+    case menuiserie = "Menuiserie"
+    case divers = "Divers"
+
+    var id: String { rawValue }
+
+    var symbole: String {
+        switch self {
+        case .demolition: return "hammer"
+        case .electricite: return "bolt"
+        case .plomberie: return "drop"
+        case .chauffage: return "heater.vertical"
+        case .peinture: return "paintbrush"
+        case .sols: return "square.grid.3x3"
+        case .menuiserie: return "door.left.hand.open"
+        case .divers: return "ellipsis.circle"
+        }
+    }
+
+    /// Rangement des prestations créées avant les catégories.
+    static func deviner(_ nom: String) -> CategorieTravaux {
+        let n = nom.lowercased()
+        if n.contains("peinture") || n.contains("enduit") || n.contains("préparation des murs") { return .peinture }
+        if n.contains("sol") || n.contains("ragréage") || n.contains("plinthe") || n.contains("carrelage") || n.contains("parquet") { return .sols }
+        if n.contains("prise") || n.contains("électri") || n.contains("gaine") || n.contains("saignée") || n.contains("lumin") { return .electricite }
+        if n.contains("radiateur") || n.contains("chauffage") { return .chauffage }
+        if n.contains("eau") || n.contains("évacuation") || n.contains("lavabo") || n.contains("wc") { return .plomberie }
+        if n.contains("porte") || n.contains("fenêtre") || n.contains("placard") { return .menuiserie }
+        if n.contains("cloison") || n.contains("dépose") || n.contains("démoli") { return .demolition }
+        return .divers
+    }
+}
+
 enum TauxTVA {
     static let valeurs: [Double] = [0, 5.5, 10, 20]
 }
@@ -111,17 +152,23 @@ final class Prestation {
     var prixHT: Double
     var tauxTVA: Double
     var baseRaw: String
+    var categorieRaw: String = ""
 
-    init(nom: String, unite: UniteDevis, prixHT: Double, tauxTVA: Double = 10, base: BaseQuantite) {
+    init(nom: String, unite: UniteDevis, prixHT: Double, tauxTVA: Double = 10, base: BaseQuantite,
+         categorie: CategorieTravaux? = nil) {
         self.nom = nom
         self.uniteRaw = unite.rawValue
         self.prixHT = prixHT
         self.tauxTVA = tauxTVA
         self.baseRaw = base.rawValue
+        self.categorieRaw = (categorie ?? CategorieTravaux.deviner(nom)).rawValue
     }
 
     var unite: UniteDevis { UniteDevis(rawValue: uniteRaw) ?? .unite }
     var base: BaseQuantite { BaseQuantite(rawValue: baseRaw) ?? .manuelle }
+    var categorie: CategorieTravaux {
+        CategorieTravaux(rawValue: categorieRaw) ?? CategorieTravaux.deviner(nom)
+    }
 }
 
 /// Une ligne du devis d'un chantier.
@@ -133,6 +180,8 @@ final class LigneDevis {
     var prixHT: Double
     var tauxTVA: Double
     var ordre: Int
+    /// Pièce concernée (nom), vide pour les travaux généraux.
+    var section: String = ""
     var chantier: Chantier?
 
     init(designation: String, unite: UniteDevis, quantite: Double, prixHT: Double, tauxTVA: Double, ordre: Int) {
@@ -146,6 +195,26 @@ final class LigneDevis {
 
     var unite: UniteDevis { UniteDevis(rawValue: uniteRaw) ?? .unite }
     var totalHT: Double { (quantite * prixHT * 100).rounded() / 100 }
+}
+
+extension Chantier {
+    /// Sections du devis : les pièces (ordre de scan), puis les sections orphelines, puis les travaux généraux ("").
+    var sectionsDevis: [String] {
+        var noms: [String] = []
+        for piece in pieces.sorted(by: { $0.dateScan < $1.dateScan }) where !noms.contains(piece.nom) {
+            noms.append(piece.nom)
+        }
+        for ligne in lignesDevis.sorted(by: { $0.ordre < $1.ordre })
+        where !ligne.section.isEmpty && !noms.contains(ligne.section) {
+            noms.append(ligne.section)
+        }
+        noms.append("")
+        return noms
+    }
+
+    func piece(nommee nom: String) -> Piece? {
+        pieces.first { $0.nom == nom }
+    }
 }
 
 struct MontantTVA: Hashable {
@@ -193,6 +262,72 @@ enum Catalogue {
         exemples.forEach { contexte.insert($0) }
         d.set(true, forKey: Reglages.catalogueInitialise)
     }
+
+    /// Ajoute les travaux par pièce (électricité, plomberie…) et range le catalogue existant.
+    static func completerSiBesoin(_ contexte: ModelContext) {
+        let d = UserDefaults.standard
+        guard !d.bool(forKey: Reglages.catalogueTravaux) else { return }
+        let existantes = (try? contexte.fetch(FetchDescriptor<Prestation>())) ?? []
+        for prestation in existantes where prestation.categorieRaw.isEmpty {
+            prestation.categorieRaw = CategorieTravaux.deviner(prestation.nom).rawValue
+        }
+        let noms = Set(existantes.map { $0.nom.lowercased() })
+        for modele in travauxDeBase where !noms.contains(modele.nom.lowercased()) {
+            contexte.insert(Prestation(nom: modele.nom, unite: modele.unite, prixHT: modele.prix,
+                                       base: modele.base, categorie: modele.categorie))
+        }
+        d.set(true, forKey: Reglages.catalogueTravaux)
+    }
+
+    struct ModelePrestation {
+        var nom: String
+        var unite: UniteDevis
+        var prix: Double
+        var base: BaseQuantite = .manuelle
+        var categorie: CategorieTravaux
+    }
+
+    /// Prix d'exemple, à adapter dans Réglages > Catalogue.
+    static let travauxDeBase: [ModelePrestation] = [
+        // Électricité
+        ModelePrestation(nom: "Création de saignée dans mur pour passage de gaine", unite: .ml, prix: 25, categorie: .electricite),
+        ModelePrestation(nom: "Fourniture et pose de gaine ICTA avec câble", unite: .ml, prix: 9, categorie: .electricite),
+        ModelePrestation(nom: "Rebouchage de saignée", unite: .ml, prix: 10, categorie: .electricite),
+        ModelePrestation(nom: "Création d'une prise de courant 16 A", unite: .unite, prix: 75, categorie: .electricite),
+        ModelePrestation(nom: "Création d'une sortie de câble pour radiateur", unite: .unite, prix: 80, categorie: .electricite),
+        ModelePrestation(nom: "Création d'un point lumineux avec interrupteur", unite: .unite, prix: 110, categorie: .electricite),
+        ModelePrestation(nom: "Création d'un circuit au tableau électrique", unite: .unite, prix: 65, categorie: .electricite),
+        // Chauffage
+        ModelePrestation(nom: "Pose d'un radiateur électrique", unite: .unite, prix: 90, categorie: .chauffage),
+        ModelePrestation(nom: "Fourniture d'un radiateur électrique", unite: .unite, prix: 350, categorie: .chauffage),
+        // Plomberie
+        ModelePrestation(nom: "Création d'une alimentation eau froide et eau chaude", unite: .unite, prix: 150, categorie: .plomberie),
+        ModelePrestation(nom: "Création d'une évacuation PVC", unite: .unite, prix: 120, categorie: .plomberie),
+        ModelePrestation(nom: "Pose d'un lavabo ou d'une vasque", unite: .unite, prix: 180, categorie: .plomberie),
+        ModelePrestation(nom: "Pose d'un WC", unite: .unite, prix: 220, categorie: .plomberie),
+        ModelePrestation(nom: "Dépose d'une baignoire et de son habillage", unite: .unite, prix: 250, categorie: .plomberie),
+        ModelePrestation(nom: "Adaptation de l'évacuation pour receveur", unite: .unite, prix: 180, categorie: .plomberie),
+        ModelePrestation(nom: "Fourniture et pose d'un receveur de douche extra-plat", unite: .unite, prix: 450, categorie: .plomberie),
+        ModelePrestation(nom: "Fourniture et pose d'une paroi de douche", unite: .unite, prix: 400, categorie: .plomberie),
+        ModelePrestation(nom: "Fourniture et pose d'une colonne de douche avec mitigeur", unite: .unite, prix: 280, categorie: .plomberie),
+        ModelePrestation(nom: "Système d'étanchéité sous carrelage (SPEC)", unite: .m2, prix: 35, categorie: .plomberie),
+        ModelePrestation(nom: "Pose de faïence murale", unite: .m2, prix: 55, categorie: .sols),
+        // Démolition, maçonnerie
+        ModelePrestation(nom: "Dépose de cloison", unite: .m2, prix: 30, categorie: .demolition),
+        ModelePrestation(nom: "Montage de cloison en plaques de plâtre", unite: .m2, prix: 45, categorie: .demolition),
+        ModelePrestation(nom: "Création d'une ouverture dans une cloison", unite: .unite, prix: 450, categorie: .demolition),
+        ModelePrestation(nom: "Évacuation des gravats", unite: .forfait, prix: 200, categorie: .demolition),
+        // Sols
+        ModelePrestation(nom: "Dépose de revêtement de sol", unite: .m2, prix: 10, base: .surfaceSol, categorie: .sols),
+        ModelePrestation(nom: "Pose de carrelage au sol", unite: .m2, prix: 45, base: .surfaceSol, categorie: .sols),
+        ModelePrestation(nom: "Pose de parquet flottant", unite: .m2, prix: 30, base: .surfaceSol, categorie: .sols),
+        // Peinture
+        ModelePrestation(nom: "Peinture des portes (2 faces)", unite: .unite, prix: 60, base: .portes, categorie: .peinture),
+        // Menuiserie
+        ModelePrestation(nom: "Pose d'un bloc-porte", unite: .unite, prix: 250, categorie: .menuiserie),
+        // Divers
+        ModelePrestation(nom: "Main d'œuvre", unite: .heure, prix: 45, categorie: .divers),
+    ]
 
     static func numeroSuivant() -> String {
         let d = UserDefaults.standard

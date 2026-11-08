@@ -1,24 +1,74 @@
 import SwiftUI
 
 /// Génère le PDF du devis d'un chantier.
+/// Une ligne du tableau du devis : titre de pièce, prestation ou sous-total.
+enum RangDevis: Identifiable {
+    case titre(String)
+    case ligne(LigneDevis)
+    case sousTotal(String, Double)
+
+    var id: String {
+        switch self {
+        case .titre(let nom): return "t-" + nom
+        case .ligne(let ligne): return "l-\(ligne.persistentModelID.hashValue)"
+        case .sousTotal(let nom, _): return "s-" + nom
+        }
+    }
+
+    /// Place occupée, en lignes ordinaires.
+    var poids: Int {
+        switch self {
+        case .ligne(let ligne): return ligne.designation.count > 70 ? 2 : 1
+        default: return 1
+        }
+    }
+}
+
+/// Génère le PDF du devis d'un chantier, regroupé par pièce.
 @MainActor
 enum ExportDevisPDF {
-    static let lignesParPage = 16
+    static let lignesPremierePage = 14
+    static let lignesParPage = 24
+
+    static func rangs(_ chantier: Chantier) -> [RangDevis] {
+        let lignes = chantier.lignesDevis.sorted { $0.ordre < $1.ordre }
+        let parPiece = lignes.contains { !$0.section.isEmpty }
+        guard parPiece else { return lignes.map { .ligne($0) } }
+        var rangs: [RangDevis] = []
+        for section in chantier.sectionsDevis {
+            let liste = lignes.filter { $0.section == section }
+            guard !liste.isEmpty else { continue }
+            let titre = section.isEmpty ? "Travaux généraux" : section
+            rangs.append(.titre(titre))
+            rangs.append(contentsOf: liste.map { .ligne($0) })
+            rangs.append(.sousTotal(titre, liste.reduce(0) { $0 + $1.totalHT }))
+        }
+        return rangs
+    }
 
     static func generer(_ chantier: Chantier) -> URL? {
         let entreprise = Entreprise.actuelle
-        let lignes = chantier.lignesDevis.sorted { $0.ordre < $1.ordre }
-        let totaux = TotauxDevis(lignes: lignes, franchise: entreprise.franchiseTVA)
+        let totaux = TotauxDevis(lignes: chantier.lignesDevis, franchise: entreprise.franchiseTVA)
 
-        var groupes: [[LigneDevis]] = stride(from: 0, to: lignes.count, by: lignesParPage).map {
-            Array(lignes[$0..<min($0 + lignesParPage, lignes.count)])
+        var groupes: [[RangDevis]] = [[]]
+        var place = lignesPremierePage
+        for rang in rangs(chantier) {
+            if rang.poids > place, !(groupes.last ?? []).isEmpty {
+                groupes.append([])
+                place = lignesParPage
+            }
+            groupes[groupes.count - 1].append(rang)
+            place -= rang.poids
         }
-        if groupes.isEmpty { groupes = [[]] }
+        // Les totaux et la signature doivent tenir sur la dernière page.
+        if groupes.count > 1, (groupes.last ?? []).reduce(0, { $0 + $1.poids }) > 16 {
+            groupes.append([])
+        }
 
         let pages: [AnyView] = groupes.enumerated().map { index, groupe in
             AnyView(PageDevisPDF(chantier: chantier,
                                  entreprise: entreprise,
-                                 lignes: groupe,
+                                 rangs: groupe,
                                  totaux: totaux,
                                  premiere: index == 0,
                                  derniere: index == groupes.count - 1))
@@ -31,7 +81,7 @@ enum ExportDevisPDF {
 struct PageDevisPDF: View {
     let chantier: Chantier
     let entreprise: Entreprise
-    let lignes: [LigneDevis]
+    let rangs: [RangDevis]
     let totaux: TotauxDevis
     let premiere: Bool
     let derniere: Bool
@@ -129,23 +179,44 @@ struct PageDevisPDF: View {
             .padding(.horizontal, 6)
             .background(Color.gray.opacity(0.12))
 
-            ForEach(lignes) { ligne in
-                HStack(alignment: .top, spacing: 8) {
-                    Text(ligne.designation)
+            ForEach(rangs) { rang in
+                switch rang {
+                case .titre(let nom):
+                    Text(nom.uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Color.accentColor)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(ligne.quantite.enQuantite).frame(width: 46, alignment: .trailing)
-                    Text(ligne.unite.rawValue).frame(width: 40, alignment: .leading)
-                    Text(ligne.prixHT.enEuros).frame(width: 62, alignment: .trailing)
-                    if !entreprise.franchiseTVA {
-                        Text(ligne.tauxTVA.enPourcentage).frame(width: 34, alignment: .trailing)
+                        .padding(.top, 10)
+                        .padding(.bottom, 4)
+                        .padding(.horizontal, 6)
+                case .ligne(let ligne):
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(ligne.designation)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(ligne.quantite.enQuantite).frame(width: 46, alignment: .trailing)
+                        Text(ligne.unite.rawValue).frame(width: 40, alignment: .leading)
+                        Text(ligne.prixHT.enEuros).frame(width: 62, alignment: .trailing)
+                        if !entreprise.franchiseTVA {
+                            Text(ligne.tauxTVA.enPourcentage).frame(width: 34, alignment: .trailing)
+                        }
+                        Text(ligne.totalHT.enEuros).frame(width: 70, alignment: .trailing)
                     }
-                    Text(ligne.totalHT.enEuros).frame(width: 70, alignment: .trailing)
+                    .font(.system(size: 9))
+                    .padding(.vertical, 5)
+                    .padding(.horizontal, 6)
+                    Divider()
+                case .sousTotal(let nom, let montant):
+                    HStack {
+                        Spacer()
+                        Text("Sous-total \(nom)")
+                        Text(montant.enEuros).frame(width: 70, alignment: .trailing)
+                    }
+                    .font(.system(size: 9, weight: .semibold))
+                    .padding(.vertical, 5)
+                    .padding(.horizontal, 6)
+                    .background(Color.gray.opacity(0.06))
                 }
-                .font(.system(size: 9))
-                .padding(.vertical, 6)
-                .padding(.horizontal, 6)
-                Divider()
             }
         }
     }

@@ -11,6 +11,12 @@ struct DevisView: View {
     @State private var ajoutOuvert = false
     @State private var ligneEditee: LigneDevis?
     @State private var documentPDF: DocumentPDF?
+    @State private var cible: CibleTravaux?
+
+    struct CibleTravaux: Identifiable {
+        let id = UUID()
+        let piece: Piece?
+    }
 
     private var lignes: [LigneDevis] {
         chantier.lignesDevis.sorted { $0.ordre < $1.ordre }
@@ -29,44 +35,45 @@ struct DevisView: View {
                 }
             }
 
-            Section("Prestations") {
-                ForEach(lignes) { ligne in
-                    Button {
-                        ligneEditee = ligne
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(ligne.designation)
-                                .foregroundStyle(.primary)
-                            HStack {
-                                Text("\(ligne.quantite.enQuantite) \(ligne.unite.rawValue) × \(ligne.prixHT.enEuros)")
-                                Spacer()
-                                Text(ligne.totalHT.enEuros).fontWeight(.semibold)
-                            }
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+            ForEach(chantier.sectionsDevis, id: \.self) { section in
+                let piece = chantier.piece(nommee: section)
+                let liste = lignes.filter { $0.section == section }
+                if !section.isEmpty {
+                    Section {
+                        lignesListe(liste)
+                        Button {
+                            cible = CibleTravaux(piece: piece)
+                        } label: {
+                            Label("Ajouter des travaux dans \(section)", systemImage: "plus.circle")
                         }
+                        .disabled(piece == nil)
+                    } header: {
+                        enTeteSection(section, liste: liste)
                     }
                 }
-                .onDelete { positions in
-                    let liste = lignes
-                    for i in positions { contexte.delete(liste[i]) }
-                }
-                .onMove { depart, arrivee in
-                    var liste = lignes
-                    liste.move(fromOffsets: depart, toOffset: arrivee)
-                    for (index, ligne) in liste.enumerated() { ligne.ordre = index }
-                }
+            }
 
+            Section {
+                lignesListe(lignes.filter { $0.section.isEmpty })
+                Button {
+                    cible = CibleTravaux(piece: nil)
+                } label: {
+                    Label("Ajouter des travaux généraux", systemImage: "plus.circle")
+                }
                 Button {
                     ajoutOuvert = true
                 } label: {
-                    Label("Ajouter une prestation du catalogue", systemImage: "plus.circle")
+                    Label("Une prestation sur plusieurs pièces", systemImage: "square.stack.3d.up")
                 }
                 Button {
                     ajouterLigneLibre()
                 } label: {
                     Label("Ajouter une ligne libre", systemImage: "square.and.pencil")
                 }
+            } header: {
+                enTeteSection("Travaux généraux", liste: lignes.filter { $0.section.isEmpty })
+            } footer: {
+                Text("Les travaux propres à chaque pièce (saignée, prise, radiateur…) s'ajoutent dans la section de la pièce.")
             }
 
             Section("Total") {
@@ -106,12 +113,56 @@ struct DevisView: View {
         .sheet(isPresented: $ajoutOuvert) {
             AjoutPrestationView(chantier: chantier)
         }
+        .sheet(item: $cible) { cible in
+            AjoutTravauxView(chantier: chantier, piece: cible.piece)
+        }
         .sheet(item: $ligneEditee) { ligne in
             LigneDevisFormView(ligne: ligne)
         }
         .sheet(item: $documentPDF) { document in
             FeuillePartage(elements: [document.url])
                 .presentationDetents([.medium, .large])
+        }
+    }
+
+    private func enTeteSection(_ titre: String, liste: [LigneDevis]) -> some View {
+        HStack {
+            Text(titre)
+            Spacer()
+            if !liste.isEmpty {
+                Text(liste.reduce(0) { $0 + $1.totalHT }.enEuros + " HT")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func lignesListe(_ liste: [LigneDevis]) -> some View {
+        ForEach(liste) { ligne in
+            Button {
+                ligneEditee = ligne
+            } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(ligne.designation)
+                        .foregroundStyle(.primary)
+                    HStack {
+                        Text("\(ligne.quantite.enQuantite) \(ligne.unite.rawValue) × \(ligne.prixHT.enEuros)")
+                        Spacer()
+                        Text(ligne.totalHT.enEuros).fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .onDelete { positions in
+            for i in positions { contexte.delete(liste[i]) }
+        }
+        .onMove { depart, arrivee in
+            // On réordonne dans la section en réutilisant ses numéros d'ordre.
+            let ordres = liste.map(\.ordre).sorted()
+            var nouvelle = liste
+            nouvelle.move(fromOffsets: depart, toOffset: arrivee)
+            for (ligne, ordre) in zip(nouvelle, ordres) { ligne.ordre = ordre }
         }
     }
 
