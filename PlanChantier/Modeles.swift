@@ -36,6 +36,8 @@ final class Chantier {
 
     /// Numéro attribué au premier ajout d'une ligne de devis (ex. D-2026-001).
     var numeroDevis: String = ""
+    /// Meubles posés dans les vues 3D (JSON), par plan.
+    var meubles3D: Data? = nil
     var dateDevis: Date?
 
     init(nom: String, client: String = "", adresse: String = "", dateCreation: Date = .now) {

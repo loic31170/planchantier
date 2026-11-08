@@ -77,5 +77,14 @@ struct PieceView: View {
             }
         }
         .navigationTitle(piece.nom)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    Vue3DView(titre: piece.nom, pieces: [piece])
+                } label: {
+                    Label("Vue 3D", systemImage: "cube")
+                }
+            }
+        }
     }
 }

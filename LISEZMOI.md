@@ -71,6 +71,13 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 - Plans de pièce cotés façon architecte : murs épais, portes avec leur sens d'ouverture, fenêtres, chaînes de cotes avec les ouvertures, échelle.
 - Rapport PDF refait : page de garde avec la carte Plans d'Apple, tableau des chiffres clés et récapitulatif des pièces, bandeau chantier en haut de chaque page, photos sur 3 colonnes étiquetées « Pièce · Photo n ».
 
+## Ajouts de la version 0.9 : 3D et mobilier
+
+- Bouton **Vue 3D** (cube) en haut d'une pièce ou d'un plan d'étage : le modèle 3D est construit à partir du scan, on le fait tourner avec un doigt et on zoome avec deux.
+- **Bibliothèque de mobilier** (cuisine, salon, chambre, salle de bain, divers) aux dimensions courantes. Touche un meuble pour le sélectionner, fais-le glisser pour le déplacer, tourne-le, duplique-le ou supprime-le. L'aménagement est enregistré avec le chantier.
+- **Export 3D en USDZ**, avec ou sans les meubles, rangé dans les Fichiers du chantier et partageable. « Voir en réalité augmentée » pose le modèle dans la pièce avec la caméra.
+- La vue 3D a besoin du scan d'origine : les pièces dupliquées ou très anciennes peuvent ne pas l'avoir.
+
 ## Organisation du code
 
 | Fichier | Rôle |
@@ -93,4 +100,6 @@ Avec un compte Apple gratuit, l'appli installée fonctionne 7 jours : il suffit 
 | `PlanEtageView.swift` | Plan d'étage assemblé |
 | `Logo.swift` | Logo de l'entreprise |
 | `PlanCoteView.swift` | Plan de pièce coté façon architecte |
+| `Vue3D.swift` | Vue 3D, déplacement des meubles, export USDZ |
+| `Mobilier3D.swift` | Bibliothèque de mobilier 3D |
 | `Fichiers.swift` | Fichiers du chantier : relevés, devis, documents scannés ou importés |

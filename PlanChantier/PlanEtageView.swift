@@ -90,5 +90,14 @@ struct EcranPlanEtage: View {
             }
         }
         .navigationTitle(titre)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    Vue3DView(titre: titre, pieces: pieces)
+                } label: {
+                    Label("Vue 3D", systemImage: "cube")
+                }
+            }
+        }
     }
 }
